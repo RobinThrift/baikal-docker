@@ -1,0 +1,42 @@
+FROM alpine:3.15 as downloader
+
+ENV VERSION 0.8.0
+
+RUN apk update && apk add curl unzip
+
+RUN mkdir /downloads
+WORKDIR /downloads
+
+RUN curl -L https://github.com/sabre-io/Baikal/releases/download/$VERSION/baikal-$VERSION.zip -o baikal.zip
+RUN unzip baikal.zip -d /baikal
+
+
+FROM php:8.0.14-fpm-alpine3.15
+
+RUN apk update && apk upgrade && \
+    apk add nginx
+
+COPY nginx.conf /etc/nginx/nginx.conf
+COPY php-fpm.conf /etc/php/php-fpm.conf
+
+RUN mkdir /var/baikal
+
+RUN chown -R nobody:nobody /var/www/html && \
+  chown -R nobody:nobody /run && \
+  chown -R nobody:nobody /var/lib/nginx && \
+  chown -R nobody:nobody /var/log/nginx && \
+  chown -R nobody:nobody /var/baikal
+
+USER nobody
+
+COPY --from=downloader --chown=nobody /baikal/baikal /var/www/baikal
+
+WORKDIR /var/www/baikal
+
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+
+COPY start.sh /start.sh
+
+ENTRYPOINT ["/docker-entrypoint.sh"] 
+
+CMD ["/start.sh"]
