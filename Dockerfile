@@ -1,6 +1,6 @@
-FROM alpine:3.15 as downloader
+FROM alpine:3.18 as downloader
 
-ENV VERSION 0.8.0
+ENV VERSION 0.9.3
 
 RUN apk update && apk add curl unzip
 
@@ -11,7 +11,7 @@ RUN curl -L https://github.com/sabre-io/Baikal/releases/download/$VERSION/baikal
 RUN unzip baikal.zip -d /baikal
 
 
-FROM php:8.0.14-fpm-alpine3.15
+FROM php:8.2.8-fpm-alpine3.18
 
 RUN apk update && apk upgrade && \
     apk add nginx
